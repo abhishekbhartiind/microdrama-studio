@@ -57,6 +57,7 @@ function createDrama(): Drama {
     id,
     title: '',
     logline: '',
+    seriesTitle: '',
     genre: 'Drama',
     status: 'Draft',
     episode: 1,
@@ -105,6 +106,8 @@ export function StudioDashboard() {
   const [query, setQuery] = useState('');
   const [genre, setGenre] = useState('All genres');
   const [tab, setTab] = useState<DramaTab>('All projects');
+  const [view, setView] = useState<'overview' | 'series'>('overview');
+  const [seriesFilter, setSeriesFilter] = useState<string | null>(null);
   const [sort, setSort] = useState<DramaSort>('updated');
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -131,13 +134,20 @@ export function StudioDashboard() {
       const genreMatches = genre === 'All genres' || drama.genre === genre;
       const queryMatches =
         !needle ||
-        `${drama.title} ${drama.logline} ${drama.genre}`.toLocaleLowerCase().includes(needle);
-      return tabMatches && genreMatches && queryMatches;
+        `${drama.title} ${drama.logline} ${drama.seriesTitle} ${drama.genre}`
+          .toLocaleLowerCase()
+          .includes(needle);
+      const seriesMatches =
+        !seriesFilter ||
+        (seriesFilter === '__standalone__'
+          ? !drama.seriesTitle.trim()
+          : drama.seriesTitle === seriesFilter);
+      return tabMatches && genreMatches && queryMatches && seriesMatches;
     });
     return sort === 'title'
       ? matching.sort((first, second) => first.title.localeCompare(second.title))
       : matching;
-  }, [dramas, genre, query, sort, tab]);
+  }, [dramas, genre, query, seriesFilter, sort, tab]);
 
   async function handleSave(drama: Drama) {
     if (!editor) return;
@@ -185,17 +195,48 @@ export function StudioDashboard() {
             <LayoutDashboard size={17} />
             Overview
           </button>
-          <button className={tab === 'Drafts' ? 'active' : ''} onClick={() => setTab('Drafts')}>
+          <button
+            className={tab === 'Drafts' ? 'active' : ''}
+            onClick={() => {
+              setView('overview');
+              setTab('Drafts');
+              setSeriesFilter(null);
+            }}
+          >
             <Film size={17} />
             Drafts<span className="nav-count">{counts.drafts}</span>
           </button>
-          <button className={tab === 'Ready' ? 'active' : ''} onClick={() => setTab('Ready')}>
+          <button
+            className={tab === 'Ready' ? 'active' : ''}
+            onClick={() => {
+              setView('overview');
+              setTab('Ready');
+              setSeriesFilter(null);
+            }}
+          >
             <Check size={17} />
             Ready to shoot<span className="nav-count">{counts.ready}</span>
           </button>
-          <button className={tab === 'Archived' ? 'active' : ''} onClick={() => setTab('Archived')}>
+          <button
+            className={tab === 'Archived' ? 'active' : ''}
+            onClick={() => {
+              setView('overview');
+              setTab('Archived');
+              setSeriesFilter(null);
+            }}
+          >
             <FolderOpen size={17} />
             Archived<span className="nav-count">{counts.archived}</span>
+          </button>
+          <button
+            className={view === 'series' ? 'active' : ''}
+            onClick={() => {
+              setView('series');
+              setSeriesFilter(null);
+            }}
+          >
+            <Clapperboard size={17} />
+            Series<span className="nav-count">{seriesGroups(dramas).length}</span>
           </button>
         </nav>
         <div className="side-label tools-label">STORY TOOLS</div>
@@ -258,7 +299,16 @@ export function StudioDashboard() {
       <section className="main-area">
         <header className="topbar">
           <div className="crumb">
-            Workspace <span>/</span> <b>{tab === 'All projects' ? 'Overview' : tab}</b>
+            Workspace <span>/</span>{' '}
+            <b>
+              {view === 'series'
+                ? 'Series'
+                : seriesFilter
+                  ? seriesFilter.replace('__standalone__', 'Standalone dramas')
+                  : tab === 'All projects'
+                    ? 'Overview'
+                    : tab}
+            </b>
           </div>
           <div className="top-actions">
             <button className="icon-button" aria-label="Notifications">
@@ -329,9 +379,20 @@ export function StudioDashboard() {
           <section className="section-heading">
             <div>
               <h2>
-                Your dramas <span>{filtered.length}</span>
+                {view === 'series'
+                  ? 'Your series'
+                  : seriesFilter
+                    ? 'Series episodes'
+                    : 'Your dramas'}{' '}
+                <span>{view === 'series' ? seriesGroups(dramas).length : filtered.length}</span>
               </h2>
-              <p>Every great series starts with one good scene.</p>
+              <p>
+                {view === 'series'
+                  ? 'Keep every episode in its own story arc.'
+                  : seriesFilter
+                    ? `Episodes in ${seriesFilter === '__standalone__' ? 'Standalone dramas' : seriesFilter}.`
+                    : 'Every great series starts with one good scene.'}
+              </p>
             </div>
             <button
               className="text-link"
@@ -339,65 +400,82 @@ export function StudioDashboard() {
                 setTab('All projects');
                 setGenre('All genres');
                 setQuery('');
+                setSeriesFilter(null);
+                if (view === 'series') setView('overview');
               }}
             >
-              Clear filters <ArrowRight size={15} />
+              {seriesFilter ? 'Clear series filter' : 'Clear filters'} <ArrowRight size={15} />
             </button>
           </section>
 
           <div className="filter-row">
             <div className="tabs" role="tablist" aria-label="Filter dramas by status">
-              {tabs.map((item) => (
-                <button
-                  key={item}
-                  role="tab"
-                  aria-selected={tab === item}
-                  className={tab === item ? 'selected' : ''}
-                  onClick={() => setTab(item)}
-                >
-                  {item}
-                  <span>
-                    {item === 'All projects'
-                      ? counts.total
-                      : item === 'Drafts'
-                        ? counts.drafts
-                        : item === 'Ready'
-                          ? counts.ready
-                          : counts.archived}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="filters">
-              <label className="searchbox">
-                <Search size={16} />
-                <input
-                  placeholder="Search dramas..."
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  aria-label="Search dramas"
-                />
-              </label>
-              <select
-                value={genre}
-                onChange={(event) => setGenre(event.target.value)}
-                aria-label="Filter by genre"
-              >
-                {genreOptions.map((item) => (
-                  <option key={item}>{item}</option>
+              {view === 'overview' &&
+                tabs.map((item) => (
+                  <button
+                    key={item}
+                    role="tab"
+                    aria-selected={tab === item}
+                    className={tab === item ? 'selected' : ''}
+                    onClick={() => setTab(item)}
+                  >
+                    {item}
+                    <span>
+                      {item === 'All projects'
+                        ? counts.total
+                        : item === 'Drafts'
+                          ? counts.drafts
+                          : item === 'Ready'
+                            ? counts.ready
+                            : counts.archived}
+                    </span>
+                  </button>
                 ))}
-              </select>
-              <button
-                className="sort-button"
-                onClick={() => setSort((current) => (current === 'updated' ? 'title' : 'updated'))}
-                aria-label={`Sort by ${sort === 'updated' ? 'title' : 'recently updated'}`}
-              >
-                <ArrowDownUp size={15} /> Sort
-              </button>
             </div>
+            {view === 'overview' && (
+              <div className="filters">
+                <label className="searchbox">
+                  <Search size={16} />
+                  <input
+                    placeholder="Search dramas..."
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    aria-label="Search dramas"
+                  />
+                </label>
+                <select
+                  value={genre}
+                  onChange={(event) => setGenre(event.target.value)}
+                  aria-label="Filter by genre"
+                >
+                  {genreOptions.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+                <button
+                  className="sort-button"
+                  onClick={() =>
+                    setSort((current) => (current === 'updated' ? 'title' : 'updated'))
+                  }
+                  aria-label={`Sort by ${sort === 'updated' ? 'title' : 'recently updated'}`}
+                >
+                  <ArrowDownUp size={15} /> Sort
+                </button>
+              </div>
+            )}
           </div>
 
-          {dramasQuery.isError ? (
+          {view === 'series' ? (
+            <SeriesDirectory
+              dramas={dramas}
+              onOpen={(group) => {
+                setSeriesFilter(group);
+                setView('overview');
+                setTab('All projects');
+              }}
+              onCreate={() => setEditor({ drama: createDrama(), isNew: true })}
+            />
+          ) : dramasQuery.isError ? (
             <LoadError
               message={error ?? 'Could not load your dramas.'}
               onRetry={() => void dramasQuery.refetch()}
@@ -417,12 +495,15 @@ export function StudioDashboard() {
             </div>
           ) : (
             <EmptyState
-              hasFilters={Boolean(query || genre !== 'All genres' || tab !== 'All projects')}
+              hasFilters={Boolean(
+                query || genre !== 'All genres' || tab !== 'All projects' || seriesFilter,
+              )}
               onCreate={() => setEditor({ drama: createDrama(), isNew: true })}
               onClear={() => {
                 setQuery('');
                 setGenre('All genres');
                 setTab('All projects');
+                setSeriesFilter(null);
               }}
             />
           )}
@@ -455,6 +536,63 @@ export function StudioDashboard() {
         </div>
       )}
     </main>
+  );
+}
+
+function seriesGroups(dramas: Drama[]) {
+  const groups = new Set(dramas.map((drama) => drama.seriesTitle.trim() || '__standalone__'));
+  return [...groups];
+}
+
+function SeriesDirectory({
+  dramas,
+  onOpen,
+  onCreate,
+}: {
+  dramas: Drama[];
+  onOpen: (series: string) => void;
+  onCreate: () => void;
+}) {
+  const groups = new Map<string, Drama[]>();
+  dramas.forEach((drama) => {
+    const key = drama.seriesTitle.trim() || '__standalone__';
+    groups.set(key, [...(groups.get(key) ?? []), drama]);
+  });
+  const items = [...groups.entries()].sort(([a], [b]) => a.localeCompare(b));
+  if (!items.length)
+    return <EmptyState hasFilters={false} onCreate={onCreate} onClear={() => undefined} />;
+  return (
+    <div className="series-grid">
+      {items.map(([name, episodes]) => {
+        const runtime = episodes.reduce(
+          (sum, episode) =>
+            sum + episode.scenes.reduce((total, scene) => total + scene.duration, 0),
+          0,
+        );
+        const ready = episodes.filter((episode) => episode.status === 'Ready').length;
+        const title = name === '__standalone__' ? 'Standalone dramas' : name;
+        return (
+          <button className="series-card" type="button" key={name} onClick={() => onOpen(name)}>
+            <span
+              className="series-cover"
+              style={{
+                backgroundImage: `linear-gradient(0deg,#101611bb,transparent),url(${episodes[0]?.cover || fallbackCover})`,
+              }}
+            >
+              <small>{name === '__standalone__' ? 'ONE-OFF STORIES' : 'DRAMA SERIES'}</small>
+              <b>{title}</b>
+            </span>
+            <span className="series-meta">
+              <span>
+                {episodes.length} episode{episodes.length === 1 ? '' : 's'}
+              </span>
+              <span>{ready} ready</span>
+              <span>{runtime}s written</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

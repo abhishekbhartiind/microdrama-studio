@@ -1,18 +1,19 @@
 # Low-Level Design
 
 ## Domain model
-- `Drama`: `id`, `title`, `logline`, `genre`, `status` (`draft | ready | archived`), `cover_url`, `video_url`, `episode_number`, `scenes[]`, `created_at`, `updated_at`.
+- `Drama`: `id`, `title`, `logline`, `series_title`, `genre`, `status` (`draft | ready | archived`), `cover_url`, `video_url`, `episode_number`, `scenes[]`, `created_at`, `updated_at`.
 - `Scene`: `id`, `label`, `duration_seconds`, `visual`, `dialogue`, `production_note`, `sort_order`.
 - Runtime is derived as the sum of scene durations. Target runtime is 60 seconds.
 
 ## Frontend structure
-- `app/page.tsx` and `components/studio/*`: dashboard, drama cards, video preview, and accessible create/edit dialog.
+- `app/(marketing)/*`: landing page and public feature, workflow, stories, pricing, about, and FAQ pages.
+- `app/studio/page.tsx` and `components/studio/*`: dashboard, series directory, drama cards, video preview, and create/edit dialog.
 - `app/providers.tsx`: browser-scoped TanStack Query client.
 - `hooks/queries/*`: list/detail queries and stable query keys.
 - `hooks/mutations/*`: separate create/update/delete mutations with targeted cache invalidation.
 - `lib/api/http.ts` and `lib/api/dramas.ts`: transport errors and mapping between UI camel-case fields and API fields.
 - `lib/types.ts`: UI-facing drama and scene types. Scene production notes are persisted as part of the scene document.
-- `NEXT_PUBLIC_API_URL`: FastAPI base URL, defaulting to `http://localhost:8010/api/v1`.
+- `NEXT_PUBLIC_API_URL`: FastAPI base URL, defaulting to `http://127.0.0.1:8010/api/v1` for local development.
 
 ## Backend structure
 - `app/main.py`: application lifecycle, middleware, and router registration.
@@ -21,7 +22,7 @@
 - `app/services`: story-state business rules.
 - `app/repositories`: persistence protocol and MongoDB implementation.
 - `app/db/mongo.py`: Mongo client lifecycle, health check, and indexes.
-- MongoDB uses the `reelcraft` database and `dramas` collection by default; configure with `MONGODB_DATABASE` and `MONGODB_URI`.
+- MongoDB uses the `reelcraft` database and `dramas` collection by default; configure with `MONGODB_DATABASE` and `MONGODB_URI`. Indexes support status/date sorting and series/episode grouping.
 
 ## API
 - `GET /api/v1/health` → `{status: "ok", database: "connected"}`

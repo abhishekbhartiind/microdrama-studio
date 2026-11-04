@@ -13,6 +13,7 @@ export type Drama = {
   id: string;
   title: string;
   logline: string;
+  seriesTitle: string;
   genre: string;
   status: DramaStatus;
   episode: number;

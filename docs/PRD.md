@@ -21,7 +21,9 @@ Initial product measures: time to first draft, percentage of drafts reaching 60 
 ## 5. Scope
 ### MVP
 - Dashboard with project list, search, status/genre filters, and summary counts.
-- Create and edit drama metadata: title, logline, genre, status, cover, video URL, and episode number. Preview linked video reels in the dashboard.
+- Create, edit, and delete drama metadata: title, logline, series, genre, status, cover, video URL, and episode number. Preview linked video reels in the dashboard.
+- Series directory groups episodes and lets a creator open a series-specific episode list.
+- Public marketing pages for features, workflow, stories, pricing, about, and FAQs.
 - Structured scene editor with scene duration, visual action, dialogue, and notes.
 - 60-second runtime meter and scene timing adjustments.
 - Save draft and mark ready for production.
@@ -32,12 +34,12 @@ Initial product measures: time to first draft, percentage of drafts reaching 60 
 - Video hosting/upload, editing/rendering, publishing to social platforms, payments, team permissions, AI script generation, and real-time collaboration.
 
 ## 6. Core flows
-1. **Browse:** open dashboard → search/filter projects → open a drama.
+1. **Browse:** open the studio → search/filter dramas or open a series → edit an episode.
 2. **Create:** select New drama → enter premise and metadata → add timed scenes → save draft.
 3. **Update:** open a drama → edit fields or scene beats → review runtime → save or mark ready.
 
 ## 7. Functional requirements
-- Project cards show title, genre, episode count, status, and updated time.
+- Project cards show title, series/genre, episode number, status, and updated time.
 - Empty, loading, error, and populated states are designed.
 - A new drama starts with an editable hook/opening beat and a final-turn beat.
 - Scene durations are positive integers; the interface totals them and indicates whether the episode fits 60 seconds.
@@ -60,5 +62,7 @@ Initial product measures: time to first draft, percentage of drafts reaching 60 
 - User can create dramas, browse saved dramas, and search by title.
 - User can create a drama, add/edit scenes, see runtime totals, and save.
 - User can reopen and update a drama.
+- User can group dramas into a series, filter a series, and preview an attached video URL.
+- Marketing pages load from their public routes and link into the studio.
 - FastAPI exposes documented CRUD endpoints and validates request fields.
 - Desktop and mobile screens remain usable at narrow widths.

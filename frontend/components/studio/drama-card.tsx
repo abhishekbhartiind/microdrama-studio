@@ -34,7 +34,8 @@ export function DramaCard({
         </span>
         <span className="cover-bottom">
           <small>
-            {drama.genre.toUpperCase()} <b>·</b> EP {String(drama.episode).padStart(2, '0')}
+            {(drama.seriesTitle || drama.genre).toUpperCase()} <b>·</b> EP{' '}
+            {String(drama.episode).padStart(2, '0')}
           </small>
           <strong>{drama.title}</strong>
         </span>

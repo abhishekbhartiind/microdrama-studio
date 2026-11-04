@@ -11,7 +11,7 @@ class Settings:
 
     @classmethod
     def from_environment(cls) -> "Settings":
-        origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")
+        origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
         return cls(
             mongodb_uri=os.getenv("MONGODB_URI", "mongodb://localhost:27017"),
             mongodb_database=os.getenv("MONGODB_DATABASE", "reelcraft"),

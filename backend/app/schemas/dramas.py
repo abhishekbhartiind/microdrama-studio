@@ -30,6 +30,7 @@ class DramaWrite(BaseModel):
 
     title: str = Field(min_length=1, max_length=120)
     logline: str = Field(default="", max_length=280)
+    series_title: str = Field(default="", max_length=120)
     genre: str = Field(default="Drama", min_length=1, max_length=40)
     status: DramaStatus = DramaStatus.draft
     cover_url: Optional[HttpUrl] = None

@@ -15,6 +15,7 @@ type ApiDrama = {
   id: string;
   title: string;
   logline: string;
+  series_title: string;
   genre: string;
   status: ApiStatus;
   cover_url: string | null;
@@ -66,6 +67,7 @@ function fromApi(drama: ApiDrama): Drama {
     id: drama.id,
     title: drama.title,
     logline: drama.logline,
+    seriesTitle: drama.series_title,
     genre: drama.genre,
     status: statusFromApi[drama.status],
     episode: drama.episode_number,
@@ -80,6 +82,7 @@ function toApi(drama: Drama): DramaPayload {
   return {
     title: drama.title.trim(),
     logline: drama.logline.trim(),
+    series_title: drama.seriesTitle.trim(),
     genre: drama.genre,
     status: statusToApi[drama.status],
     cover_url: drama.cover.trim() || null,

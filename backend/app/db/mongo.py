@@ -21,6 +21,7 @@ class MongoDatabase:
         self._client.admin.command("ping")
         self.dramas.create_index([("status", ASCENDING), ("updated_at", DESCENDING)])
         self.dramas.create_index([("updated_at", DESCENDING)])
+        self.dramas.create_index([("series_title", ASCENDING), ("episode_number", ASCENDING)])
 
     def close(self) -> None:
         self._client.close()

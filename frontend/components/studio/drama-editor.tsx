@@ -143,6 +143,15 @@ export function DramaEditor({
                 <small>{draft.logline.length}/280</small>
               </label>
               <label>
+                Series name <span className="optional-label">OPTIONAL</span>
+                <input
+                  maxLength={120}
+                  placeholder="Group this episode into a series"
+                  value={draft.seriesTitle}
+                  onChange={(event) => update('seriesTitle', event.target.value)}
+                />
+              </label>
+              <label>
                 Cover image URL <span className="optional-label">OPTIONAL</span>
                 <input
                   type="url"

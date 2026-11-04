@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint app components hooks lib",
-    "format": "prettier --write app components hooks lib",
-    "format:check": "prettier --check app components hooks lib"
+    "format": "prettier --write app components hooks lib types",
+    "format:check": "prettier --check app components hooks lib types"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",
