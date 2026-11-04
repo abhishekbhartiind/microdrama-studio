@@ -1,10 +1,10 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional
-from typing_extensions import Self
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field, model_validator
+from typing_extensions import Self
 
 
 class DramaStatus(str, Enum):

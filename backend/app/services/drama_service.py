@@ -16,8 +16,12 @@ class DramaService:
     def __init__(self, repository: DramaRepository) -> None:
         self._repository = repository
 
-    def list_dramas(self, query: str, status: Optional[DramaStatus], limit: int, offset: int) -> List[DramaRead]:
-        return self._repository.list(query=query, status=status.value if status else None, limit=limit, offset=offset)
+    def list_dramas(
+        self, query: str, status: Optional[DramaStatus], limit: int, offset: int
+    ) -> List[DramaRead]:
+        return self._repository.list(
+            query=query, status=status.value if status else None, limit=limit, offset=offset
+        )
 
     def get_drama(self, drama_id: str) -> DramaRead:
         drama = self._repository.get(drama_id)

@@ -41,7 +41,7 @@ Initial product measures: time to first draft, percentage of drafts reaching 60 
 - Empty, loading, error, and populated states are designed.
 - A new drama starts with an editable hook/opening beat and a final-turn beat.
 - Scene durations are positive integers; the interface totals them and indicates whether the episode fits 60 seconds.
-- Save preserves the current draft; ready status requires a title and at least one scene.
+- Save preserves the current draft; ready status requires at least one scene and a total runtime of 60 seconds or less.
 - Mobile layouts keep primary actions available and avoid horizontal scrolling.
 
 ## 8. Quality requirements
@@ -57,7 +57,7 @@ Initial product measures: time to first draft, percentage of drafts reaching 60 
 - The FastAPI service requires a reachable MongoDB deployment; local development can use the provided Docker Compose service.
 
 ## 10. Acceptance criteria
-- User can browse demo dramas and search by title.
+- User can create dramas, browse saved dramas, and search by title.
 - User can create a drama, add/edit scenes, see runtime totals, and save.
 - User can reopen and update a drama.
 - FastAPI exposes documented CRUD endpoints and validates request fields.

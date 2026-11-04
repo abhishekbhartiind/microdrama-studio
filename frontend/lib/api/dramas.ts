@@ -57,6 +57,7 @@ function mapScene(scene: ApiScene): Scene {
     duration: scene.duration_seconds,
     visual: scene.visual,
     dialogue: scene.dialogue,
+    productionNote: scene.production_note,
   };
 }
 
@@ -90,39 +91,53 @@ function toApi(drama: Drama): DramaPayload {
       duration_seconds: Number(scene.duration),
       visual: scene.visual.trim(),
       dialogue: scene.dialogue.trim(),
-      production_note: '',
+      production_note: scene.productionNote.trim(),
       sort_order,
     })),
   };
 }
 
 export const dramasApi = {
-  async list(options: { query?: string; status?: ApiStatus; limit?: number; offset?: number } = {}): Promise<Drama[]> {
+  async list(
+    options: {
+      query?: string;
+      status?: ApiStatus;
+      limit?: number;
+      offset?: number;
+      signal?: AbortSignal;
+    } = {},
+  ): Promise<Drama[]> {
     const params = new URLSearchParams();
     if (options.query) params.set('query', options.query);
     if (options.status) params.set('status', options.status);
     params.set('limit', String(options.limit ?? 100));
     params.set('offset', String(options.offset ?? 0));
-    const response = await apiRequest<ApiDrama[]>(`/dramas?${params.toString()}`);
+    const response = await apiRequest<ApiDrama[]>(`/dramas?${params.toString()}`, {
+      signal: options.signal,
+    });
     return response.map(fromApi);
   },
 
-  async get(id: string): Promise<Drama> {
-    return fromApi(await apiRequest<ApiDrama>(`/dramas/${encodeURIComponent(id)}`));
+  async get(id: string, signal?: AbortSignal): Promise<Drama> {
+    return fromApi(await apiRequest<ApiDrama>(`/dramas/${encodeURIComponent(id)}`, { signal }));
   },
 
   async create(drama: Drama): Promise<Drama> {
-    return fromApi(await apiRequest<ApiDrama>('/dramas', {
-      method: 'POST',
-      body: JSON.stringify(toApi(drama)),
-    }));
+    return fromApi(
+      await apiRequest<ApiDrama>('/dramas', {
+        method: 'POST',
+        body: JSON.stringify(toApi(drama)),
+      }),
+    );
   },
 
   async update(drama: Drama): Promise<Drama> {
-    return fromApi(await apiRequest<ApiDrama>(`/dramas/${encodeURIComponent(drama.id)}`, {
-      method: 'PUT',
-      body: JSON.stringify(toApi(drama)),
-    }));
+    return fromApi(
+      await apiRequest<ApiDrama>(`/dramas/${encodeURIComponent(drama.id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(toApi(drama)),
+      }),
+    );
   },
 
   remove(id: string): Promise<void> {

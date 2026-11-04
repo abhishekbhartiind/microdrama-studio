@@ -1,8 +1,9 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { Check, Clock3, Plus, Sparkles, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Clock3, Plus, Sparkles, X } from 'lucide-react';
 import type { Drama, DramaStatus, Scene } from '@/lib/types';
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 const genres = ['Romance', 'Thriller', 'Mystery', 'Sci-fi', 'Drama', 'Comedy', 'Fantasy', 'Horror'];
 
@@ -26,23 +27,41 @@ export function DramaEditor({
   const runtime = draft.scenes.reduce((total, scene) => total + Number(scene.duration || 0), 0);
 
   function update<K extends keyof Drama>(key: K, value: Drama[K]) {
-    setDraft(current => ({ ...current, [key]: value }));
+    setDraft((current) => ({ ...current, [key]: value }));
   }
 
   function updateScene(id: string, key: keyof Scene, value: string | number) {
-    update('scenes', draft.scenes.map(scene => scene.id === id ? { ...scene, [key]: value } : scene));
+    setDraft((current) => ({
+      ...current,
+      scenes: current.scenes.map((scene) => (scene.id === id ? { ...scene, [key]: value } : scene)),
+    }));
+  }
+
+  function moveScene(id: string, direction: -1 | 1) {
+    const index = draft.scenes.findIndex((scene) => scene.id === id);
+    const target = index + direction;
+    if (target < 0 || target >= draft.scenes.length) return;
+    const nextScenes = [...draft.scenes];
+    [nextScenes[index], nextScenes[target]] = [nextScenes[target], nextScenes[index]];
+    update('scenes', nextScenes);
   }
 
   function addScene() {
     const nextOrder = draft.scenes.length;
-    update('scenes', [...draft.scenes, {
-      id: crypto.randomUUID(),
-      label: 'New scene',
-      duration: Math.max(1, 60 - runtime),
-      visual: '',
-      dialogue: '',
-    }]);
-    requestAnimationFrame(() => document.querySelector<HTMLInputElement>(`[data-scene-order="${nextOrder}"]`)?.focus());
+    update('scenes', [
+      ...draft.scenes,
+      {
+        id: crypto.randomUUID(),
+        label: 'New scene',
+        duration: Math.max(1, 60 - runtime),
+        visual: '',
+        dialogue: '',
+        productionNote: '',
+      },
+    ]);
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLInputElement>(`[data-scene-order="${nextOrder}"]`)?.focus(),
+    );
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -52,7 +71,11 @@ export function DramaEditor({
       setError('Give your drama a title before saving.');
       return;
     }
-    if (draft.scenes.some(scene => !Number.isInteger(Number(scene.duration)) || Number(scene.duration) < 1)) {
+    if (
+      draft.scenes.some(
+        (scene) => !Number.isInteger(Number(scene.duration)) || Number(scene.duration) < 1,
+      )
+    ) {
       setError('Every scene needs a duration of at least one second.');
       return;
     }
@@ -75,56 +98,127 @@ export function DramaEditor({
   }
 
   return (
-    <div className="modal-backdrop" onMouseDown={event => event.target === event.currentTarget && onClose()}>
-      <section className="editor-modal" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="editor-modal">
         <header className="editor-head">
           <div>
-            <div className="eyebrow"><span className="eyebrow-dot" />DRAMA WORKSHOP</div>
-            <h2 id="editor-title" className="serif">{draft.title || (isNew ? 'New drama' : 'Edit drama')}</h2>
+            <div className="eyebrow">
+              <span className="eyebrow-dot" />
+              DRAMA WORKSHOP
+            </div>
+            <DialogTitle asChild>
+              <h2 id="editor-title" className="serif">
+                {draft.title || (isNew ? 'New drama' : 'Edit drama')}
+              </h2>
+            </DialogTitle>
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close editor"><X size={19} /></button>
+          <DialogClose asChild>
+            <button className="icon-button" type="button" aria-label="Close editor">
+              <X size={19} />
+            </button>
+          </DialogClose>
         </header>
 
         <form onSubmit={submit}>
           <div className="editor-scroll">
             <div className="editor-fields">
-              <label>Drama title
-                <input autoFocus maxLength={120} placeholder="Give your story a name" value={draft.title} onChange={event => update('title', event.target.value)} />
+              <label>
+                Drama title
+                <input
+                  autoFocus
+                  maxLength={120}
+                  placeholder="Give your story a name"
+                  value={draft.title}
+                  onChange={(event) => update('title', event.target.value)}
+                />
               </label>
-              <label>Logline
-                <textarea maxLength={280} placeholder="One irresistible sentence..." value={draft.logline} onChange={event => update('logline', event.target.value)} />
+              <label>
+                Logline
+                <textarea
+                  maxLength={280}
+                  placeholder="One irresistible sentence..."
+                  value={draft.logline}
+                  onChange={(event) => update('logline', event.target.value)}
+                />
                 <small>{draft.logline.length}/280</small>
               </label>
-              <label>Video URL <span className="optional-label">OPTIONAL</span>
-                <input type="url" placeholder="https://…/your-reel.mp4 (direct video URL)" value={draft.videoUrl} onChange={event => update('videoUrl', event.target.value)} />
+              <label>
+                Cover image URL <span className="optional-label">OPTIONAL</span>
+                <input
+                  type="url"
+                  placeholder="https://…/cover.jpg"
+                  value={draft.cover}
+                  onChange={(event) => update('cover', event.target.value)}
+                />
+              </label>
+              <label>
+                Video URL <span className="optional-label">OPTIONAL</span>
+                <input
+                  type="url"
+                  placeholder="https://…/your-reel.mp4 (direct video URL)"
+                  value={draft.videoUrl}
+                  onChange={(event) => update('videoUrl', event.target.value)}
+                />
               </label>
               <div className="field-split">
-                <label>Genre
-                  <select value={draft.genre} onChange={event => update('genre', event.target.value)}>
+                <label>
+                  Genre
+                  <select
+                    value={draft.genre}
+                    onChange={(event) => update('genre', event.target.value)}
+                  >
                     {!genres.includes(draft.genre) && <option>{draft.genre}</option>}
-                    {genres.map(genre => <option key={genre}>{genre}</option>)}
+                    {genres.map((genre) => (
+                      <option key={genre}>{genre}</option>
+                    ))}
                   </select>
                 </label>
-                <label>Episode
-                  <input type="number" min="1" max="9999" value={draft.episode} onChange={event => update('episode', Number(event.target.value))} />
+                <label>
+                  Episode
+                  <input
+                    type="number"
+                    min="1"
+                    max="9999"
+                    value={draft.episode}
+                    onChange={(event) => update('episode', Number(event.target.value))}
+                  />
                 </label>
-                <label>Status
-                  <select value={draft.status} onChange={event => update('status', event.target.value as DramaStatus)}>
-                    <option>Draft</option><option>Ready</option><option>Archived</option>
+                <label>
+                  Status
+                  <select
+                    value={draft.status}
+                    onChange={(event) => update('status', event.target.value as DramaStatus)}
+                  >
+                    <option>Draft</option>
+                    <option>Ready</option>
+                    <option>Archived</option>
                   </select>
                 </label>
               </div>
             </div>
 
             <div className="scene-heading">
-              <div><h3>Scene beats</h3><p>Shape the story, second by second.</p></div>
+              <div>
+                <h3>Scene beats</h3>
+                <p>Shape the story, second by second.</p>
+              </div>
               <div className={`runtime ${runtime > 60 ? 'over' : ''}`} aria-live="polite">
-                <Clock3 size={14} /><b>{runtime}s</b><span>/ 60s</span>
+                <Clock3 size={14} />
+                <b>{runtime}s</b>
+                <span>/ 60s</span>
               </div>
             </div>
             <div className="timeline" aria-label={`Script runtime ${runtime} of 60 seconds`}>
-              <div className="timeline-track"><span style={{ width: `${Math.min(runtime / 60 * 100, 100)}%` }} /></div>
-              <div className="timeline-labels"><span>0:00</span><span>HOOK</span><span>TURN</span><span>CLIFFHANGER</span><span>1:00</span></div>
+              <div className="timeline-track">
+                <span style={{ width: `${Math.min((runtime / 60) * 100, 100)}%` }} />
+              </div>
+              <div className="timeline-labels">
+                <span>0:00</span>
+                <span>HOOK</span>
+                <span>TURN</span>
+                <span>CLIFFHANGER</span>
+                <span>1:00</span>
+              </div>
             </div>
 
             <div className="scene-list">
@@ -132,29 +226,144 @@ export function DramaEditor({
                 <div className="scene" key={scene.id}>
                   <div className="scene-index">{String(index + 1).padStart(2, '0')}</div>
                   <div className="scene-fields">
-                    <input className="scene-label" data-scene-order={index} maxLength={80} value={scene.label} onChange={event => updateScene(scene.id, 'label', event.target.value)} aria-label={`Scene ${index + 1} label`} />
-                    <textarea maxLength={2000} placeholder="What do we see?" value={scene.visual} onChange={event => updateScene(scene.id, 'visual', event.target.value)} aria-label={`Scene ${index + 1} visual action`} />
-                    <input className="dialogue" maxLength={2000} placeholder="Dialogue (optional)" value={scene.dialogue} onChange={event => updateScene(scene.id, 'dialogue', event.target.value)} aria-label={`Scene ${index + 1} dialogue`} />
+                    <input
+                      className="scene-label"
+                      data-scene-order={index}
+                      maxLength={80}
+                      value={scene.label}
+                      onChange={(event) => updateScene(scene.id, 'label', event.target.value)}
+                      aria-label={`Scene ${index + 1} label`}
+                    />
+                    <textarea
+                      maxLength={2000}
+                      placeholder="What do we see?"
+                      value={scene.visual}
+                      onChange={(event) => updateScene(scene.id, 'visual', event.target.value)}
+                      aria-label={`Scene ${index + 1} visual action`}
+                    />
+                    <input
+                      className="dialogue"
+                      maxLength={2000}
+                      placeholder="Dialogue (optional)"
+                      value={scene.dialogue}
+                      onChange={(event) => updateScene(scene.id, 'dialogue', event.target.value)}
+                      aria-label={`Scene ${index + 1} dialogue`}
+                    />
+                    <textarea
+                      className="production-note"
+                      maxLength={2000}
+                      placeholder="Production note (optional)"
+                      value={scene.productionNote}
+                      onChange={(event) =>
+                        updateScene(scene.id, 'productionNote', event.target.value)
+                      }
+                      aria-label={`Scene ${index + 1} production note`}
+                    />
                   </div>
-                  <label className="seconds"><input type="number" min="1" max="600" value={scene.duration} onChange={event => updateScene(scene.id, 'duration', Number(event.target.value))} aria-label={`Scene ${index + 1} duration`} /><span>sec</span></label>
-                  <button className="remove-scene" type="button" onClick={() => update('scenes', draft.scenes.filter(item => item.id !== scene.id))} aria-label={`Remove scene ${index + 1}`}><X size={15} /></button>
+                  <label className="seconds">
+                    <input
+                      type="number"
+                      min="1"
+                      max="600"
+                      value={scene.duration}
+                      onChange={(event) =>
+                        updateScene(scene.id, 'duration', Number(event.target.value))
+                      }
+                      aria-label={`Scene ${index + 1} duration`}
+                    />
+                    <span>sec</span>
+                  </label>
+                  <div className="scene-actions">
+                    <button
+                      className="remove-scene"
+                      type="button"
+                      onClick={() => moveScene(scene.id, -1)}
+                      disabled={index === 0}
+                      aria-label={`Move scene ${index + 1} up`}
+                    >
+                      <ArrowUp size={13} />
+                    </button>
+                    <button
+                      className="remove-scene"
+                      type="button"
+                      onClick={() => moveScene(scene.id, 1)}
+                      disabled={index === draft.scenes.length - 1}
+                      aria-label={`Move scene ${index + 1} down`}
+                    >
+                      <ArrowDown size={13} />
+                    </button>
+                    <button
+                      className="remove-scene"
+                      type="button"
+                      onClick={() =>
+                        update(
+                          'scenes',
+                          draft.scenes.filter((item) => item.id !== scene.id),
+                        )
+                      }
+                      aria-label={`Remove scene ${index + 1}`}
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
-            <button className="add-scene" type="button" onClick={addScene}><Plus size={15} /> Add a scene beat</button>
-            <div className="editor-note"><Sparkles size={16} /><span><b>Keep the scroll-stopper.</b> End each episode with a turn they’ll replay.</span></div>
-            {error && <p className="form-error" role="alert">{error}</p>}
+            <button
+              className="add-scene"
+              type="button"
+              onClick={addScene}
+              disabled={draft.scenes.length >= 30}
+            >
+              <Plus size={15} /> Add a scene beat
+            </button>
+            <div className="editor-note">
+              <Sparkles size={16} />
+              <span>
+                <b>Keep the scroll-stopper.</b> End each episode with a turn they’ll replay.
+              </span>
+            </div>
+            {error && (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            )}
           </div>
           <footer className="editor-foot">
-            {runtime > 60 ? <span className="runtime-warning">{runtime - 60}s over target · Ready status requires 60s or less</span> : <span>{60 - runtime}s left in your minute</span>}
+            {runtime > 60 ? (
+              <span className="runtime-warning">
+                {runtime - 60}s over target · Ready status requires 60s or less
+              </span>
+            ) : (
+              <span>{60 - runtime}s left in your minute</span>
+            )}
             <div>
-              {!isNew && <button className="delete-button" type="button" onClick={confirmDelete} disabled={saving}>Delete</button>}
-              <button className="cancel-button" type="button" onClick={onClose} disabled={saving}>Cancel</button>
-              <button className="primary-button" type="submit" disabled={saving}>{saving ? 'Saving…' : <><Check size={16} /> Save drama</>}</button>
+              {!isNew && (
+                <button
+                  className="delete-button"
+                  type="button"
+                  onClick={confirmDelete}
+                  disabled={saving}
+                >
+                  Delete
+                </button>
+              )}
+              <button className="cancel-button" type="button" onClick={onClose} disabled={saving}>
+                Cancel
+              </button>
+              <button className="primary-button" type="submit" disabled={saving}>
+                {saving ? (
+                  'Saving…'
+                ) : (
+                  <>
+                    <Check size={16} /> Save drama
+                  </>
+                )}
+              </button>
             </div>
           </footer>
         </form>
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

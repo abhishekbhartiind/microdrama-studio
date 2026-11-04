@@ -36,8 +36,12 @@ def get_drama(drama_id: str, service: DramaService = Depends(get_drama_service))
         raise translate_service_error(error) from error
 
 
-@router.post("", response_model=DramaRead, status_code=status.HTTP_201_CREATED, summary="Create a drama")
-def create_drama(payload: DramaWrite, service: DramaService = Depends(get_drama_service)) -> DramaRead:
+@router.post(
+    "", response_model=DramaRead, status_code=status.HTTP_201_CREATED, summary="Create a drama"
+)
+def create_drama(
+    payload: DramaWrite, service: DramaService = Depends(get_drama_service)
+) -> DramaRead:
     try:
         return service.create_drama(payload)
     except DramaRuleError as error:

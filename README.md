@@ -4,7 +4,7 @@ A responsive studio for planning and managing one-minute micro drama reels. The 
 
 ## Product
 
-Creators can browse their drama projects, search and filter them, start a new episode, and update a linked one-minute video reel and its structured script with scenes, dialogue, timing, and production notes. Video files are linked by URL in this MVP. The dashboard reads and writes dramas through the FastAPI service. The backend stores drama records in MongoDB.
+Creators can browse their drama projects, search and filter them, start a new episode, and update a linked one-minute video reel and its structured script with scenes, dialogue, timing, and production notes. Video files are linked by URL in this MVP. The dashboard reads and writes dramas through FastAPI using TanStack Query for server state, cached queries, and mutation invalidation. The backend stores drama records in MongoDB.
 
 ## Run locally
 
@@ -16,6 +16,8 @@ cp .env.example .env.local
 npm install
 npm run dev
 ```
+
+Use `npm run lint`, `npm run format`, and `npm run build` for frontend checks.
 
 ### MongoDB
 
@@ -31,8 +33,8 @@ docker compose up -d mongodb
 cd backend
 cp .env.example .env
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 uvicorn app.main:app --reload --port 8010
 ```
 
-See [docs/](docs/) for the PRD, high-level design, and low-level design.
+For production dependencies only, use `pip install -r requirements.txt`. See [docs/](docs/) for the PRD, high-level design, and low-level design.

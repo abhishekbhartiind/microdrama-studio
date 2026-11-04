@@ -6,6 +6,7 @@ export type Scene = {
   duration: number;
   visual: string;
   dialogue: string;
+  productionNote: string;
 };
 
 export type Drama = {

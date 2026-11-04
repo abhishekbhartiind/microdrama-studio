@@ -10,7 +10,9 @@ from app.schemas.dramas import DramaRead, DramaWrite
 
 
 class DramaRepository(Protocol):
-    def list(self, query: str = "", status: Optional[str] = None, limit: int = 100, offset: int = 0) -> List[DramaRead]: ...
+    def list(
+        self, query: str = "", status: Optional[str] = None, limit: int = 100, offset: int = 0
+    ) -> List[DramaRead]: ...
     def get(self, drama_id: str) -> Optional[DramaRead]: ...
     def create(self, payload: DramaWrite) -> DramaRead: ...
     def update(self, drama_id: str, payload: DramaWrite) -> Optional[DramaRead]: ...
@@ -36,7 +38,9 @@ class MongoDramaRepository:
             "updated_at": updated_at,
         }
 
-    def list(self, query: str = "", status: Optional[str] = None, limit: int = 100, offset: int = 0) -> List[DramaRead]:
+    def list(
+        self, query: str = "", status: Optional[str] = None, limit: int = 100, offset: int = 0
+    ) -> List[DramaRead]:
         filters: dict = {}
         if status:
             filters["status"] = status
@@ -47,7 +51,9 @@ class MongoDramaRepository:
                 {"logline": {"$regex": pattern, "$options": "i"}},
                 {"genre": {"$regex": pattern, "$options": "i"}},
             ]
-        cursor = self._collection.find(filters).sort("updated_at", DESCENDING).skip(offset).limit(limit)
+        cursor = (
+            self._collection.find(filters).sort("updated_at", DESCENDING).skip(offset).limit(limit)
+        )
         return [self._to_read(document) for document in cursor]
 
     def get(self, drama_id: str) -> Optional[DramaRead]:
@@ -66,7 +72,9 @@ class MongoDramaRepository:
         existing = self._collection.find_one({"_id": drama_id}, {"created_at": 1})
         if existing is None:
             return None
-        replacement = self._to_document(payload, created_at=existing["created_at"], updated_at=datetime.now(timezone.utc))
+        replacement = self._to_document(
+            payload, created_at=existing["created_at"], updated_at=datetime.now(timezone.utc)
+        )
         updated = self._collection.find_one_and_replace(
             {"_id": drama_id}, replacement, return_document=ReturnDocument.AFTER
         )
